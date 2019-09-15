@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.DepartmentMapper"><!--namespace指向mapper文件所在地-->
+    <select id="getUidByDepartmentId" resultType="java.lang.String">
+        select uid from workers where department_id=#{departmentId} limit #{start},#{num}
+    </select>
+
+    <select id="getAllUid" resultType="java.lang.String">
+        select uid from workers limit #{start},#{num}
+    </select>
+
+    <select id="checkDuplicate" resultType="java.lang.String">
+        select charger_name from department where department_id=#{departmentId} or name=#{name}
+    </select>
+
+    <update id="addDepartment">
+        insert into department (department_id,name,tel,work_place,charger_name,charger_uid,work_time_schedule_id,extra_work_time_schedule_id,staffing,noon_break_id) values
+        (#{department.departmentId},#{department.name},#{department.tel},#{department.workPlace},#{department.chargerName},#{department.chargerUid},#{department.workTimeScheduleId},
+        #{department.extraWorkTimeScheduleId},#{department.staffing}, #{department.noonBreakId})
+    </update>
+
+    <update id="deleteDepartment">
+        delete from department where department_id=#{departmentId} and name=#{name}
+    </update>
+
+    <select id="getAllUserDepartmentId" resultType="java.lang.String">
+        select department_id from workers where expired is null
+    </select>
+
+    <select id="getAllDepartmentId" resultType="java.lang.String">
+        select department_id from department 
+    </select>
+    
+    <update id="updateStaffing">
+        update department set staffing=#{staffing} where department_id=#{departmentId}
+    </update>
+
+    <select id="getAllClockInRule" resultType="backend.clockin.pojo.department.ClockInRule">
+        select * from work_time_schedule
+    </select>
+
+    <select id="checkDuplicateWorkTimeId" resultType="java.lang.String">
+        select work_time_schedule_id from work_time_schedule where work_time_schedule_id=#{newScheduleId}
+    </select>
+
+    <update id="updateClockInRule">
+        update work_time_schedule set work_time_schedule_id=#{clockInRule.workTimeScheduleId},
+        start_work=#{clockInRule.startWork}, end_work=#{clockInRule.endWork}, updated=now() where work_time_schedule_id=#{oldId}
+    </update>
+
+    <update id="updateDepartmentWorkTimeSchedule">
+        update department set work_time_schedule_id=#{newSchedule} where work_time_schedule_id=#{oldSchedule}
+    </update>
+
+    <update id="addClockInRule" parameterType="backend.clockin.pojo.department.ClockInRule">
+        insert into work_time_schedule (work_time_schedule_id,start_work,end_work) values (#{workTimeScheduleId},#{startWork},#{endWork})
+    </update>
+
+    <update id="deleteClockInSchedule">
+        delete from work_time_schedule where work_time_schedule_id=#{workTimeId}
+    </update>
+
+    <select id="checkWorkTimeIdInUse" resultType="java.lang.String">
+        select work_time_schedule_id from department where work_time_schedule_id=#{workTimeId}
+    </select>
+
+
+    <select id="getAllExtraWorkRule" resultType="backend.clockin.pojo.department.ExtraWorkRule">
+        select * from extra_work_time_schedule
+    </select>
+
+    <select id="checkDuplicateExtraWorkTimeId" resultType="java.lang.String">
+        select extra_work_time_schedule_id from extra_work_time_schedule where extra_work_time_schedule_id=#{newScheduleId}
+    </select>
+
+    <update id="updateExtraWorkRule">
+        update extra_work_time_schedule set extra_work_time_schedule_id=#{extraWorkRule.extraWorkTimeScheduleId},
+        start_work=#{extraWorkRule.startWork}, end_work=#{extraWorkRule.endWork}, minimum_work_time=#{extraWorkRule.minimumWorkTime},
+        updated=now() where extra_work_time_schedule_id=#{oldId}
+    </update>
+
+    <update id="updateDepartmentExtraWorkTimeSchedule">
+        update department set extra_work_time_schedule_id=#{newSchedule} where extra_work_time_schedule_id=#{oldSchedule}
+    </update>
+
+    <update id="addExtraWorkRule" parameterType="backend.clockin.pojo.department.ExtraWorkRule">
+        insert into extra_work_time_schedule (extra_work_time_schedule_id,start_work,end_work,minimum_work_time) values (#{extraWorkTimeScheduleId},#{startWork},#{endWork},#{minimumWorkTime})
+    </update>
+
+    <update id="deleteExtraWorkSchedule">
+        delete from extra_work_time_schedule where extra_work_time_schedule_id=#{workTimeId}
+    </update>
+
+    <select id="checkExtraWorkTimeIdInUse" resultType="java.lang.String">
+        select extra_work_time_schedule_id from department where extra_work_time_schedule_id=#{workTimeId}
+    </select>
+
+    <select id="getAllNoonBreakRule" resultType="backend.clockin.pojo.department.NoonBreakRule">
+        select * from noon_break_form
+    </select>
+
+    <select id="checkDuplicateNoonBreakId" resultType="java.lang.String">
+        select noon_break_id from noon_break_form where noon_break_id=#{newScheduleId}
+    </select>
+
+    <update id="updateDepartmentNoonBreakSchedule">
+        update department set noon_break_id=#{newSchedule} where noon_break_id=#{oldSchedule}
+    </update>
+
+    <update id="updateNoonBreakRule">
+        update noon_break_form set noon_break_id=#{noonBreakRule.noonBreakId}, start_time=#{noonBreakRule.startTime}, end_time=#{noonBreakRule.endTime} where noon_break_id=#{oldId}
+    </update>
+
+    <update id="addNoonBreakRule" parameterType="backend.clockin.pojo.department.NoonBreakRule">
+        insert into noon_break_form (noon_break_id, start_time, end_time) values (#{noonBreakId},#{startTime},#{endTime})
+    </update>
+
+    <select id="checkNoonBreakIdInUse" resultType="java.lang.String">
+        select noon_break_id from department where noon_break_id=#{noonBreakId}
+    </select>
+
+    <update id="deleteNoonBreakSchedule">
+        delete from noon_break_form where noon_break_id=#{noonBreakId}
+    </update>
+</mapper>

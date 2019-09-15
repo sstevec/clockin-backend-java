@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.ApplicationMapper"><!--namespace指向mapper文件所在地-->
+
+    <update id="deleteDayOffRecord">
+    delete from day_off_record where id=#{id}
+</update>
+
+    <update id="addApplicationRecord" parameterType="backend.clockin.pojo.applyRecord.ApplicationRecord">
+        insert into application_record (application_id, uid, application_type, application_detail,
+         application_description, manager, reviewers, status) values (#{applicationId},#{uid},#{applicationType},
+         #{applicationDetail},#{applicationDescription},#{manager},#{reviewers},#{status})
+    </update>
+
+    <select id="getApplicationRecord" resultType="backend.clockin.pojo.applyRecord.ApplicationRecord">
+        select * from application_record where application_id=#{applicationId}
+    </select>
+
+    <update id="deleteApplicationRecord">
+        update application_record set status='3' where application_id=#{applicationId}
+    </update>
+
+    <update id="changeApplicationRecord">
+        update application_record set application_detail=#{applicationDetail}, application_description=#{applicationDescription},
+        updated=now() where application_id=#{applicationId}
+    </update>
+
+    <update id="changeApplicationStatus">
+        update application_record set status=#{targetStatus} where application_id=#{applicationId}
+    </update>
+
+    <update id="deleteDayOffRecordByDate">
+        delete from day_off_record where off_type=#{offType} and  off_date>=#{start} and off_date &lt;=#{end}
+    </update>
+    
+    <update id="addExtraWorkRecord">
+        insert into extra_work_record (application_id,uid,date,extra_work_start,extra_work_end,extra_work_hour,type) values
+         (#{extraWorkRecord.applicationId},#{extraWorkRecord.uid},#{extraWorkRecord.date},
+         #{extraWorkRecord.extraWorkStart},#{extraWorkRecord.extraWorkEnd},#{extraWorkRecord.extraWorkHour},#{extraWorkRecord.type})
+    </update>
+
+    <update id="addReviewList">
+        insert into application_review_list (application_id,uid,reviewers,review_list,status) values
+         (#{applicationReviewList.applicationId},#{applicationReviewList.uid},#{applicationReviewList.reviewers},
+         #{applicationReviewList.reviewList},#{applicationReviewList.status})
+    </update>
+
+    <update id="deleteReviewList">
+        update application_review_list set status='3' where application_id=#{applicationId}
+    </update>
+
+    <select id="getReviewList" resultType="backend.clockin.pojo.applyRecord.ApplicationReviewList">
+        select * from application_review_list where application_id=#{applicationId}
+    </select>
+
+    <update id="updateReviewList">
+        update application_review_list set review_list=#{newReviewResult}, status=#{status} where application_id=#{applicationId}
+    </update>
+
+    <update id="deleteExtraWorkRecord">
+        delete from extra_work_record where application_id=#{applicationId}
+    </update>
+
+    <update id="addMergedDayOffRecord" parameterType="backend.clockin.pojo.dayOff.MergedDayOffRecord">
+        insert into merged_day_off_record (uid, off_date, start_time, end_time) values
+        (#{mergedDayOffRecord.uid}, #{mergedDayOffRecord.offDate},#{mergedDayOffRecord.startTime},#{mergedDayOffRecord.endTime})
+    </update>
+
+    <select id="getMergedDayOffRecord" resultType="backend.clockin.pojo.dayOff.MergedDayOffRecord">
+        select * from merged_day_off_record where uid=#{uid} and off_date=#{day}
+    </select>
+
+    <update id="addBoundedDayOffRecord" parameterType="backend.clockin.pojo.dayOff.BoundedDayOffRecord">
+        insert into bound_day_off_record (uid,off_date,start_bound,end_bound,start_bound_id,end_bound_id) values
+        (#{boundedDayOffRecord.uid}, #{boundedDayOffRecord.offDate},#{boundedDayOffRecord.startBound},#{boundedDayOffRecord.endBound},
+        #{boundedDayOffRecord.startBoundId}, #{boundedDayOffRecord.endBoundId})
+    </update>
+
+    <select id="getBoundedDayOffRecord" resultType="backend.clockin.pojo.dayOff.BoundedDayOffRecord">
+        select * from bound_day_off_record where uid=#{uid} and off_date=#{day}
+    </select>
+
+    <select id="getMergedDayOffRecordById" resultType="backend.clockin.pojo.dayOff.MergedDayOffRecord">
+        select * from merged_day_off_record where id=#{id}
+    </select>
+
+    <update id="deleteMergedRecord">
+        delete from merged_day_off_record where uid=#{uid} and off_date=#{day}
+    </update>
+
+    <update id="deleteBoundedRecord">
+        delete from bound_day_off_record where uid=#{uid} and off_date=#{day}
+    </update>
+
+    <update id="updateChangeDayOffType">
+        update workers set ${type}=#{changeHour} where uid=#{uid}
+    </update>
+
+    <select id="getDayOffRecordByType" resultType="backend.clockin.pojo.dayOff.DayOffRecord">
+        select * from day_off_record where uid=#{uid} and off_date=#{day} and off_type=#{type}
+    </select>
+
+    <select id="getAllReviewList" resultType="backend.clockin.pojo.applyRecord.ApplicationReviewList">
+        select * from application_review_list
+    </select>
+
+    <select id="getExtraWorkRecord" resultType="backend.clockin.pojo.extraWork.ExtraWorkRecord">
+        select * from extra_work_record where uid=#{uid} and date=#{day}
+    </select>
+</mapper>

@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.DataManageMapper"><!--namespace指向mapper文件所在地-->
+
+    <!--form operation-->
+    <update id="createForm">
+create table ${name} (column1 varchar(255))
+</update>
+
+    <update id="dropForm">
+drop table ${name}
+</update>
+
+    <update id="changeFormName">
+alter table ${old_name} rename ${new_name}
+</update>
+
+    <select id="showDatabase" resultType="java.lang.String">
+    show tables
+</select>
+
+    <select id="getFormById" resultType="backend.clockin.pojo.generalFormManage.FormInfo">
+select * from managementform where id=#{id}
+</select>
+
+    <!--    managementform operation-->
+    <select id="showExistForm" resultType="backend.clockin.pojo.generalFormManage.FormInfo">
+SELECT * FROM managementform
+</select>
+
+    <update id="updateExistForm">
+        update managementform set modifyTime=now(),
+        <foreach collection="info.keys" item="updateItem" index="index" separator=",">
+            ${updateItem}=#{info[${updateItem}]}
+        </foreach>
+        where id=#{id}
+    </update>
+
+    <update id="addExistForm" parameterType="backend.clockin.pojo.generalFormManage.FormInfo">
+insert into managementform(id,name,description,columns,columnTypeOne,columnTypeTwo,columnTypeThree)
+values(#{id}, #{name}, #{description}, #{columns}, #{columnTypeOne},#{columnTypeTwo},#{columnTypeThree})
+</update>
+
+    <update id="delExistForm">
+delete from managementform where id=#{id}
+</update>
+
+    <select id="getFormColumns" resultType="java.lang.String">
+select columns from managementform where name=#{name};
+</select>
+
+    <update id="updateContentModifyTime">
+        update managementform set modifyContentTime=now() where name=#{form_name}
+    </update>
+
+
+
+    <!-- Column -->
+    <update id="addColumn">
+alter table ${form_name} add ${column_name} ${type} after ${place}
+</update>
+
+    <update id="changeColumn">
+alter table ${form_name} change ${old_column_name} ${new_column_name} ${type}
+</update>
+
+    <update id="delColumn">
+alter table ${form_name} drop ${column_name}
+</update>
+
+
+    <!--    help self check-->
+    <update id="addTestColumn">
+alter table ${form_name} add formmanagetestcolumn VARCHAR(100) DEFAULT NULL
+</update>
+
+    <update id="addTestRow">
+insert into ${form_name} (formmanagetestcolumn) values (#{value})
+    </update>
+
+    <select id="getTestRow" resultType="java.util.LinkedHashMap">
+select * from ${form_name} where formmanagetestcolumn=#{value}
+    </select>
+
+    <update id="deleteTestRow">
+delete from ${form_name} where formmanagetestcolumn=#{value}
+    </update>
+
+    <update id="deleteTestColumn">
+alter table ${form_name} drop formmanagetestcolumn
+</update>
+
+    <select id="getFirstRow" resultType="java.util.LinkedHashMap">
+    select * from ${form_name} limit 0,1
+</select>
+
+    <select id="getColumnDetails" resultType="java.util.HashMap">
+        SELECT DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,IS_NULLABLE FROM  information_schema.columns where table_name=#{form_name}
+    </select>
+
+    <select id="getColumnNamesFromSys" resultType="java.lang.String">
+        select COLUMN_NAME from information_schema.COLUMNS where table_name=#{form_name}
+    </select>
+
+    <!-- Row -->
+
+    <update id="addRow">
+        insert into ${form_name}
+        <foreach collection="input.keys" item="key" open="(" close=")" separator=",">
+            ${key}
+        </foreach>
+        values
+        <foreach collection="input.keys" item="key" open="(" close=")" separator=",">
+            #{input[${key}]}
+        </foreach>
+    </update>
+
+    <update id="changeRow">
+        update ${form_name} set updated=now(),
+        <foreach collection="input.keys" item="key" separator=",">
+            ${key}=#{input[${key}]}
+        </foreach>
+        where ${identifier}=#{identify_value}
+    </update>
+
+    <update id="delRow">
+delete from ${form_name} where ${identifier}=#{identify_value}
+</update>
+
+
+    <select id="conditionSelect" resultType="java.util.LinkedHashMap">
+        select * from ${form_name} where
+        <if test="separat == AND">
+            1=1
+            <foreach collection="input.keys" item="key">
+                ${AND} ${key}#{input[${key}]}
+            </foreach>
+        </if>
+        <if test="separat == OR">
+            1=0
+            <foreach collection="input.keys" item="key">
+                ${OR} ${key}#{input[${key}]}
+            </foreach>
+        </if>
+    </select>
+
+
+    <update id="autoWriteIn">
+        insert into ${form_name}
+        <foreach collection="column_name" index="columnNumber" item="columnName" open="(" close=")" separator=",">
+            ${columnName}
+        </foreach>
+        values
+        <foreach collection="array" index="index" item="info" separator=",">
+            (<foreach collection="info" item="key" separator=",">
+            #{key}
+        </foreach>)
+        </foreach>
+    </update>
+
+
+    <select id="generalSearch" resultType="java.util.LinkedHashMap">
+        select
+        <foreach collection="detail_name" item="columnname" index="counter">
+            <if test="counter%2 == 0">
+                ${columnname}
+            </if>
+            <if test="counter%2 != 0">
+                AS ${columnname}
+            </if>
+        </foreach>
+        from
+        <foreach collection="form_name" item="item" index="index" separator=",">
+            ${item}
+        </foreach>
+        where
+        <if test="separat == AND">
+            1=1
+            <foreach collection="cond" item="conditions">
+                ${AND}
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        <if test="searchType == 0">
+                            #{info}
+                        </if>
+                        <if test="searchType == 1">
+                            ${info}
+                        </if>
+                        <if test="searchType == 2">
+                            like ${info}
+                        </if>
+                    </if>
+                </foreach>
+            </foreach>
+        </if>
+        <if test="separat == OR">
+            1=0
+            <foreach collection="cond" item="conditions">
+                ${OR}
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        <if test="searchType == 0">
+                            #{info}
+                        </if>
+                        <if test="searchType == 1">
+                            ${info}
+                        </if>
+                        <if test="searchType == 2">
+                            like ${info}
+                        </if>
+                    </if>
+                </foreach>
+            </foreach>
+        </if>
+    </select>
+
+
+
+    <select id="quickGet" resultType="java.lang.Object">
+select ${column_name} from ${form_name} where ${identifier}=#{identify_value}
+</select>
+
+
+    <select id="quickSearch" resultType="java.lang.String">
+        select ${column_name} from ${form_name} where
+            <foreach collection="cond" item="info" index="index">
+                <if test="index == 0">
+                    ${info}
+                </if>
+                <if test="index == 1">
+                    <if test="searchType == 0">
+                        #{info}
+                    </if>
+                    <if test="searchType == 1">
+                        ${info}
+                    </if>
+                    <if test="searchType == 2">
+                        like ${info}
+                    </if>
+                </if>
+            </foreach>
+    </select>
+
+    <select id="getRow2" resultType="java.util.LinkedHashMap">
+        select
+        <foreach collection="columnNames" index="index" item="column" separator=",">
+            ${column}
+        </foreach>
+        from ${formName} where
+        <if test="separate == 'AND'">
+            1=1
+            <foreach collection="cond" item="conditions">
+                and
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        <if test="searchType == 0">
+                            #{info}
+                        </if>
+                        <if test="searchType == 1">
+                            ${info}
+                        </if>
+                        <if test="searchType == 2">
+                            like ${info}
+                        </if>
+                    </if>
+                </foreach>
+            </foreach>
+        </if>
+        <if test="separate == 'OR'">
+            1=0
+            <foreach collection="cond" item="conditions">
+                or
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        <if test="searchType == 0">
+                            #{info}
+                        </if>
+                        <if test="searchType == 1">
+                            ${info}
+                        </if>
+                        <if test="searchType == 2">
+                            like ${info}
+                        </if>
+                    </if>
+                </foreach>
+            </foreach>
+        </if>
+        limit #{start},#{num}
+    </select>
+
+
+    <select id="outFile">
+        select * into outfile ${filePath} CHARACTER SET gbk from ${formName} limit #{start},#{num}
+    </select>
+
+    <update id="inFile">
+        load data infile ${filePath} into table ${formName} LINES TERMINATED BY '\r\n'
+    </update>
+
+    <select id="getTempInFile" resultType="java.util.LinkedHashMap">
+        select * from ${formName}
+    </select>
+</mapper>

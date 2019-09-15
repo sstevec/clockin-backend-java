@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.ShiroMapper"><!--namespace指向mapper文件所在地-->
+
+    <update id="addUser" parameterType="backend.clockin.pojo.shiro.SysUser">
+insert into sysuser (uid, account, password, salt, roles) values (#{uid}, #{account}, #{password}, #{salt}, #{roles})
+</update>
+
+    <update id="deleteUser">
+delete from sysuser where account=#{account}
+</update>
+
+    <update id="changeUser">
+        update sysuser set updated=now(),
+        <foreach collection="info.keys" item="updateItem" index="index" separator=",">
+            ${updateItem}=#{info[${updateItem}]}
+        </foreach>
+        where account=#{account}
+    </update>
+
+    <select id="getAll" resultType="backend.clockin.pojo.shiro.SysUser">
+SELECT * FROM sysuser
+</select>
+
+    <select id="getUser" resultType="backend.clockin.pojo.shiro.SysUser">
+select * from sysuser where account=#{account}
+</select>
+
+
+
+    <update id="addRolePerm" parameterType="backend.clockin.pojo.shiro.SysRole">
+insert into sysrole (name, perm, created, updated) values (#{name}, #{perm},now(),now())
+</update>
+
+    <update id="deleteRolePerm">
+delete from sysrole where name=#{name} and perm=#{perm}
+</update>
+
+    <update id="deleteRole">
+delete from sysrole where name=#{name}
+</update>
+
+    <update id="changeRolePerm">
+update sysrole set perm=#{newPerm}, updated=now() where name=#{name} and perm=#{perm}
+</update>
+
+    <select id="getRole" resultType="java.lang.String">
+select perm from sysrole where name=#{name}
+</select>
+
+    <select id="getAllUser" resultType="backend.clockin.pojo.shiro.SysUser">
+        select * from sysuser limit #{startLimit},#{num}
+    </select>
+
+    <select id="getUserByCond" resultType="backend.clockin.pojo.shiro.SysUser">
+        select * from sysuser where account like ${info} or roles like ${info} limit #{startLimit},#{num}
+    </select>
+
+    <update id="softDeleteStaff">
+        update sysuser set expired=now(), status='expired' where uid=#{uid}
+    </update>
+
+    <update id="resetPassword">
+        update sysuser set password=#{password}, updated=now() where account=#{account}
+    </update>
+
+    <select id="checkExpired" resultType="java.lang.String">
+        select uid from workers where account=#{account} and expired is null
+    </select>
+
+    <select id="checkUserAlreadyExpired" resultType="java.lang.String">
+        select uid from workers where uid=#{uid} and expired is null
+    </select>
+
+    <select id="countAllUser" resultType="java.lang.Integer">
+        select count(0) from sysuser
+    </select>
+
+    <select id="countByCond" resultType="java.lang.Integer">
+        select count(0) from sysuser where account like ${info} or roles like ${info}
+    </select>
+</mapper>

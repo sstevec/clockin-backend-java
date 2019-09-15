@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.HolidayMapper"><!--namespace指向mapper文件所在地-->
+
+    <update id="addHoliday">
+    insert into holiday_form (date,name,day_off_types) values (#{Holiday.date},#{Holiday.name},#{Holiday.dayOffTypes})
+</update>
+
+    <update id="deleteHoliday">
+        delete from holiday_form where date=#{date} and name=#{name}
+    </update>
+
+    <update id="changeHoliday">
+        update holiday_form set updated=now(),
+        <foreach collection="info.keys" item="key" separator=",">
+            ${key}=#{info[${key}]}
+        </foreach>
+        where date=#{date} and name=#{name}
+    </update>
+
+    <select id="getHolidayByDate" resultType="backend.clockin.pojo.dayOff.Holiday">
+        select * from holiday_form where date>=#{start} and date &lt;=#{end} limit #{startLimit},#{num}
+    </select>
+
+    <select id="getHolidayByCond" resultType="backend.clockin.pojo.dayOff.Holiday">
+        select * from holiday_form where date>=#{start} and date &lt;=#{end} and
+        (name like ${info} or day_off_types like ${info}) limit #{startLimit},#{num}
+    </select>
+
+    <select id="countHoliday" resultType="java.lang.Integer">
+        select count(0) from holiday_form where date>=#{start} and date &lt;=#{end} and (
+       name like ${searchInfo} or day_off_types like ${searchInfo}
+        )
+    </select>
+
+    <select id="countAllHoliday" resultType="java.lang.Integer">
+        select count(0) from holiday_form where date>=#{start} and date &lt;=#{end}
+    </select>
+
+    <select id="getDayOffOptions" resultType="backend.clockin.pojo.dayOff.DayOffOptions">
+        select * from day_off_types_form
+    </select>
+
+    <update id="deleteDayOffType">
+        delete from day_off_types_form where day_off_type=#{dayOffType}
+    </update>
+
+    <update id="addDayOffType">
+        insert into day_off_types_form (day_off_type, description, created, updated) values (#{dayOffType},#{description},now(),now())
+    </update>
+
+    <update id="editDayOffType">
+        update day_off_types_form set day_off_type=#{dayOffType}, description=#{description}, updated=now() where id=#{id}
+    </update>
+</mapper>

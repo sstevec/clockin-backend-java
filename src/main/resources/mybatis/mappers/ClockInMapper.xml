@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.ClockInMapper"><!--namespace指向mapper文件所在地-->
+
+    <update id="updateClockInLog">
+        update clock_in_form_log set status='past', updated=now() where status='current'
+    </update>
+
+    <update id="addClockInLog" parameterType="backend.clockin.pojo.clockIn.ClockInLog">
+        insert into clock_in_form_log (form_name, status) values (#{formName}, #{status})
+    </update>
+
+    <select id="getWorkerClockInInfo" resultType="java.util.HashMap">
+        select id,uid,account,name,department_id,day_off_type from workers
+    </select>
+
+    <update id="addClockInRecord" parameterType="backend.clockin.pojo.clockIn.ClockIn">
+        insert into ${form_name} (uid,account,name,start_work,end_work,start_extra_work,end_extra_work,status)
+        values (#{clockIn.uid}, #{clockIn.account},#{clockIn.name},#{clockIn.startWork},#{clockIn.endWork},
+        #{clockIn.startExtraWork},#{clockIn.endExtraWork},#{clockIn.status})
+    </update>
+
+    <select id="getClockInRecord" resultType="backend.clockin.pojo.clockIn.ClockIn">
+        select * from ${form_name} where uid=#{uid} and status='1'
+    </select>
+
+    <update id="addDayOffRecord" parameterType="backend.clockin.pojo.dayOff.DayOffRecord">
+        insert into day_off_record (uid,name,off_date,off_start,off_end,off_type,off_description) values
+        (#{uid},#{name},#{offDate},#{offStart},#{offEnd},#{offType},#{offDescription})
+    </update>
+
+    <select id="getDayOffRecord" resultType="backend.clockin.pojo.dayOff.DayOffRecord">
+        select * from day_off_record where uid=#{uid} and off_date=#{day}
+    </select>
+
+    <update id="clockIn">
+        update ${form_name} set clock_in=#{time}, clock_in_status=#{clockInStatus} where uid=#{uid} and status='1'
+    </update>
+
+    <update id="clockOut">
+        update ${form_name} set clock_out=#{time}, clock_out_status=#{clockOutStatus} where uid=#{uid} and status='1'
+    </update>
+
+    <select id="getNotCalculatedRecord" resultType="backend.clockin.pojo.clockIn.ClockIn">
+        select * from ${form_name} where status='1'
+    </select>
+
+    <update id="updateCalculatedRecord">
+        update ${form_name} set work_hour=#{record.workHour}, extra_work_hour=#{record.extraWorkHour}, status='0' where uid=#{uid} and status='1'
+    </update>
+
+    <select id="getAllClockInForm" resultType="java.lang.String">
+        select form_name from clock_in_form_log
+    </select>
+
+    <select id="getPersonClockInRecord" resultType="java.util.LinkedHashMap">
+        select start_work, end_work, start_extra_work, end_extra_work, clock_in, clock_in_status, clock_out,
+        clock_out_status, work_hour, extra_work_hour, created from ${form_name} where uid=#{uid} and status=#{status}
+    </select>
+
+    <select id="getTempResultByDate" resultType="java.util.LinkedHashMap">
+        <foreach collection="form_name" index="index" item="item">
+            <if test="index != 0">
+                UNION
+            </if>
+            select * from ${item} where uid=#{uid} and created>=#{start} and created &lt;=#{end}
+        </foreach>
+        limit #{limitStart},#{pageMax}
+    </select>
+
+    <select id="getWorkerBasicInfo" resultType="java.util.LinkedHashMap">
+        select account, name, tel, manager, position, department_id, work_id from workers where uid=#{uid}
+    </select>
+
+    <select id="getClockInRecordByDate" resultType="backend.clockin.pojo.clockIn.ClockIn">
+        select * from ${form_name} where uid=#{uid} and created>=#{start} and created &lt;=#{end}
+    </select>
+
+    <select id="getAllClockInRecord" resultType="java.util.LinkedHashMap">
+        select * from ${form_name}
+    </select>
+
+    <update id="makeUpClockIn">
+        update ${form_name} set clock_in=#{clockInTime} , clock_in_status='normal' where id=#{id}
+    </update>
+
+    <update id="makeUpClockOut">
+        update ${form_name} set clock_out=#{clockOutTime} , clock_out_status='normal' where id=#{id}
+    </update>
+
+    <update id="reupdateCalculatedRecord">
+        update ${form_name} set work_hour=#{clockInInfo.workHour}, extra_work_hour=#{clockInInfo.extraWorkHour} where id=#{id}
+    </update>
+
+    <select id="getTargetColumnStatistic" resultType="java.util.LinkedHashMap">
+        <foreach collection="form_name" index="index" item="item">
+            <if test="index != 0">
+                UNION
+            </if>
+            select
+            <foreach collection="columnNames" index="index" item="column" separator=",">
+                ${column}
+            </foreach>
+            from ${item} where 1=1
+            <foreach collection="cond" item="conditions">
+                and
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        #{info}
+                    </if>
+                </foreach>
+            </foreach>
+        </foreach>
+    </select>
+
+    <select id="getManagerCountStatistic" resultType="java.lang.Integer">
+        select count(0) from workers where ${identifier}=#{identifyValue}
+    </select>
+
+    <select id="getNoonBreakInfo" resultType="java.util.HashMap">
+        select start_time, end_time from noon_break_form where noon_break_id=#{breakId}
+    </select>
+
+</mapper>

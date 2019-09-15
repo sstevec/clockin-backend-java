@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="backend.clockin.mapper.StaffMapper"><!--namespace指向mapper文件所在地-->
+
+    <update id="setWorkerMd5">
+        update workers set image=#{md5} where uid=#{uid}
+    </update>
+
+    <select id="getMd5ByUid" resultType="java.lang.String">
+        select image from workers where uid=#{uid}
+    </select>
+
+    <update id="deleteMd5ByUid">
+        update workers set image=null where uid=#{uid}
+    </update>
+
+    <select id="getStaffRelevantFormNames" resultType="java.lang.String">
+        select name from staff_relevant_form_name_corrspond
+    </select>
+
+    <update id="addStaffFormCorrespond">
+        insert into staff_relevant_form_name_corrspond (name,sys_name,column_name) values (#{name},#{sys_name},#{column_name})
+    </update>
+
+    <select id="getSysNameByFormName" resultType="java.lang.String">
+        select sys_name from staff_relevant_form_name_corrspond where name=#{name}
+    </select>
+
+    <update id="deleteRecordBySysName">
+        delete from staff_relevant_form_name_corrspond where sys_name=#{sys_name}
+    </update>
+
+    <update id="changeStaffRelevantFormName">
+        update staff_relevant_form_name_corrspond set name=#{name} where sys_name=#{sys_name}
+    </update>
+
+    <select id="getStaffRelevantAllColumnNames" resultType="java.lang.String">
+        select column_name from staff_relevant_form_name_corrspond
+    </select>
+
+    <update id="deleteColumnByColumnName">
+        delete from staff_relevant_form_name_corrspond where column_name=#{column_name}
+    </update>
+
+    <select id="getSysNameByColumnName" resultType="java.lang.String">
+        select sys_name from staff_relevant_form_name_corrspond where column_name=#{column_name}
+    </select>
+
+    <select id="getNameByColumnName" resultType="java.lang.String">
+        select name from staff_relevant_form_name_corrspond where column_name=#{column_name}
+    </select>
+
+    <update id="changeStaffRelevantColumnName">
+        update staff_relevant_form_name_corrspond set column_name=#{new_column} where column_name=#{old_column}
+    </update>
+
+    <select id="getAllColumns" resultType="java.lang.String">
+        select column_name from staff_relevant_form_name_corrspond
+    </select>
+
+    <update id="deleteStaffRelevantFormRow">
+        delete from ${form_name} where uid=#{uid}
+    </update>
+
+    <select id="staffSearch" resultType="java.util.LinkedHashMap">
+        select
+        <foreach collection="search_columns" item="searchCol" index="index" separator=",">
+            ${searchCol}
+        </foreach>
+        from
+        workers
+        <foreach collection="left_list" item="formCombo" index="index">
+            left join
+            <foreach collection="formCombo" item="forms" index="num">
+                <if test="num == 0">
+                    ${forms}
+                </if>
+                <if test="num == 1">
+                    on ${forms}
+                </if>
+            </foreach>
+        </foreach>
+        where
+        <if test="separate == AND">
+            1=1
+            <foreach collection="cond" item="conditions">
+                ${AND}
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        <if test="searchType == 0">
+                            #{info}
+                        </if>
+                        <if test="searchType == 1">
+                            ${info}
+                        </if>
+                        <if test="searchType == 2">
+                            like ${info}
+                        </if>
+                    </if>
+                </foreach>
+            </foreach>
+        </if>
+        <if test="separate == OR">
+            1=0
+            <foreach collection="cond" item="conditions">
+                ${OR}
+                <foreach collection="conditions" item="info" index="index">
+                    <if test="index == 0">
+                        ${info}
+                    </if>
+                    <if test="index == 1">
+                        <if test="searchType == 0">
+                            #{info}
+                        </if>
+                        <if test="searchType == 1">
+                            ${info}
+                        </if>
+                        <if test="searchType == 2">
+                            like ${info}
+                        </if>
+                    </if>
+                </foreach>
+            </foreach>
+        </if>
+         limit #{start},#{num}
+    </select>
+
+    <select id="getUidListBySysName" resultType="java.lang.String">
+        select uid from ${sys_name}
+    </select>
+
+    <update id="softDeleteStaff">
+        update workers set expired=now() where uid=#{uid}
+    </update>
+
+    <select id="getUidByUserName" resultType="java.lang.String">
+        select uid from workers where name=#{name}
+    </select>
+</mapper>
